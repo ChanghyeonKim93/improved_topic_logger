@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
             
             while(1){
                 c = getch();
-                ros::spinOnce();
+                
                 // send single query to all sensors.
                 bool is_query_ok = itl->isDataReceivedAllSensors();
 
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
             break;
         }
 
-    
+        ros::spinOnce();
     }
 
     // delete
