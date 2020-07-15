@@ -68,6 +68,8 @@ int main(int argc, char **argv) {
     while(ros::ok())
     {
         int c = getch(); // call my own non-blocking input function.
+        ros::spinOnce();
+
         if(c == 's'){
             cout << "\n\n[Operation]: snapshot & save the current scene.\n";
 
@@ -77,7 +79,7 @@ int main(int argc, char **argv) {
             // save all data.
             // timestamp of IMU should be larger than the other sensors.
             if(is_query_ok){
-                // itl->saveAllData();
+                itl->saveAllData();
             }
             else cout << "   fail to save...\n";
             cout << user_manual;         
@@ -87,15 +89,16 @@ int main(int argc, char **argv) {
             
             while(1){
                 c = getch();
-                
+                ros::spinOnce();
+
                 // send single query to all sensors.
                 bool is_query_ok = itl->isDataReceivedAllSensors();
 
                 // save all data
                 if(is_query_ok){
-                    // itl->saveAllData();
+                    itl->saveAllData();
                 }
-                else cout << "   fail to save...\n";
+                // else cout << "   fail to save...\n";
 
                 if(c == 'f') break;
             }
@@ -106,7 +109,6 @@ int main(int argc, char **argv) {
             break;
         }
 
-        ros::spinOnce();
     }
 
     // delete

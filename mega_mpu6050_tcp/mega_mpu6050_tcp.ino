@@ -145,8 +145,8 @@ void loop() {
   Serial.print(" | gZ = "); Serial.print(gyro[2]);
   Serial.println();*/
  
-  String data = "$" + String(u_ax) + "," + String(u_ay) + "," + String(u_az) 
-  + "," + String(u_gx) + "," + String(u_gy) + "," + String(u_gz) + "*" ;
+  String data = "$MPU6050," + String(u_ax) + "," + String(u_ay) + "," + String(u_az) 
+  + "," + String(u_gx) + "," + String(u_gy) + "," + String(u_gz) + "," + String(u_temp) + ",*";
   
   // Serial.println(data);
   int length = data.indexOf("*") + 2;
@@ -159,7 +159,7 @@ void loop() {
     time_sec  = imu_time/1000000;
     time_nsec = imu_time - time_sec*1000000;
     
-    publisher_timer = imu_time + 3000; // 150 Hz
+    publisher_timer = imu_time + 4000; // 150 Hz
     imu_msg.stamp.sec = time_sec;
     imu_msg.stamp.nsec = time_nsec;
     imu_msg.seq  = cnt_imu;
@@ -168,7 +168,7 @@ void loop() {
     ++cnt_imu;
 
     // count (160 Hz IMU. ~ 20 Hz image)
-    if(cnt > 7){
+    if(cnt > 10){
       cnt = 1;
       digitalWrite(PIN_TRIGGER, HIGH);
       digitalWrite(PIN_TRIGGER, LOW);

@@ -6,6 +6,9 @@
     ],
     "files.associations": {
         "iostream": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "fstream": "cpp",
+        "array": "cpp",
+        "*.tcc": "cpp"
     }
 }

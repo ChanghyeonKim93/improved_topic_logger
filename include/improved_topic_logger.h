@@ -69,7 +69,7 @@ private: // private methods
     void callbackImage(const sensor_msgs::ImageConstPtr& msg, const int& id);
     void callbackLidar(const sensor_msgs::PointCloud2ConstPtr& msg_lidar, const int& id);
     void callbackMcu(const improved_topic_logger::imu_serial::ConstPtr& msg_imu_serial);
-
+    void serialParser(const std::string& serial_data, float* acc_f_, float* gyro_f_, float& temp_f);
 
 private:
     // node handler
@@ -116,8 +116,8 @@ private:
     vector<int> buf_lidars_npoints;
 
     // current imu data
-    uint16_t acc_u[3], gyro_u[3];
-    uint16_t temp_u;
+    int acc_i[3], gyro_i[3];
+    int temp_i;
 
     float acc_f[3], gyro_f[3], temp_f;
 
@@ -220,7 +220,7 @@ ImprovedTopicLogger::ImprovedTopicLogger(ros::NodeHandle& nh,
     fid_imu.precision(8);
     fid_imu.setf(std::ios_base::fixed, std::ios_base::floatfield);
     if(fid_imu.is_open()){
-        fid_imu << "#seq time[us] ax[m/s2] ay[m/s2] az[m/s2] gx[rad/s] gy[rad/s] gz[rad/s] temperature[celcius]\n";
+        fid_imu << "#seq trigger time[us] ax[m/s2] ay[m/s2] az[m/s2] gx[rad/s] gy[rad/s] gz[rad/s] temperature[celcius]\n";
     }
 };
 
@@ -254,10 +254,7 @@ void ImprovedTopicLogger::streamingMode(){
 
 
 bool ImprovedTopicLogger::isDataReceivedAllSensors()
-{   
-    // initialize all flags
-    initializeAllFlags();
-    
+{       
     // Check whether all data is received.
     bool transmit_success = true;
     if(flag_imgs_ != nullptr){
@@ -352,28 +349,52 @@ void ImprovedTopicLogger::callbackLidar(const sensor_msgs::PointCloud2ConstPtr& 
 void ImprovedTopicLogger::callbackMcu(const improved_topic_logger::imu_serial::ConstPtr& msg_imu_serial){
     buf_time_ = (double)msg_imu_serial->stamp.sec + (double)msg_imu_serial->stamp.nsec/(double)1000000.0;
     current_seq_ = msg_imu_serial->seq;
-    
-    if(!msg_imu_serial->flag_trigger){
-        acc_f[0] = 1;
-        acc_f[0] = 1;
-        acc_f[0] = 1;
-        gyro_f[0] = 1;
-        gyro_f[0] = 1;
-        gyro_f[0] = 1;
-        temp_f = 1;
 
-        // save association
-        if(fid_imu.is_open()){
-            fid_imu << current_seq_ << " " << buf_time_ << " " << "\n";
-        }
-    }
-    else { // triggered IMU data.
+    char* serial_str = (char*)msg_imu_serial->data.c_str();
+    char* tok1 = strtok(serial_str,","); // first : identifier
+    tok1 = strtok(NULL,","); // 2: ax
+    acc_i[0] = std::stoi(tok1)-32768;
+    tok1 = strtok(NULL,","); // 3: ay
+    acc_i[1] = std::stoi(tok1)-32768;
+    tok1 = strtok(NULL,","); // 4: az
+    acc_i[2] = std::stoi(tok1)-32768;
+    tok1 = strtok(NULL,","); // 5: gx
+    gyro_i[0] = std::stoi(tok1)-32768;
+    tok1 = strtok(NULL,","); // 6: gy
+    gyro_i[1] = std::stoi(tok1)-32768;
+    tok1 = strtok(NULL,","); // 7: gz
+    gyro_i[2] = std::stoi(tok1)-32768;
+    tok1 = strtok(NULL,","); // 8: temperature
+    temp_i = std::stoi(tok1)-32768;
 
+
+    acc_f[0] = (float)acc_i[0]*0.0005985443115234f; // 9.80655 [m/s^2] /16384 (LSB);
+    acc_f[1] = (float)acc_i[1]*0.0005985443115234f;
+    acc_f[2] = (float)acc_i[2]*0.0005985443115234f;
+    gyro_f[0] = (float)gyro_i[0]*0.00053211257682f; // 1 [deg] / 32.8 (LSB) * pi [rad] / 180 [deg]
+    gyro_f[1] = (float)gyro_i[1]*0.00053211257682f;
+    gyro_f[2] = (float)gyro_i[2]*0.00053211257682f;
+    temp_f = (float)temp_i/340.0f+36.53f;
+
+    int trg = 0;
+    if(msg_imu_serial->flag_trigger) trg = 1;
+    // save imu data
+    if(fid_imu.is_open()){
+        fid_imu << current_seq_ << " " << trg << " "
+        << buf_time_ << " " 
+        << acc_f[0] <<" " << acc_f[1]<< " " << acc_f[2] << " "
+        << gyro_f[0] <<" " << gyro_f[1]<< " " << gyro_f[2] << " "
+        << temp_f << "\n";
     }
     
     cout << "  GCS get! [" << buf_time_ <<"] time ref."<<" seg: " << current_seq_ << "\n";
     flag_mcu_ = true;
 };
+
+void ImprovedTopicLogger::serialParser(const std::string& serial_data, float* acc_f_, float* gyro_f_, float& temp_f){
+
+};
+
 
 void ImprovedTopicLogger::saveLidarDataRingTime(const std::string& file_name, const int& id){
     int n_pts = buf_lidars_npoints[id];
@@ -431,6 +452,8 @@ void ImprovedTopicLogger::saveAllData(){
         fid_association << current_seq_ << " ";
         fid_association << buf_time_ << " ";
         for(int i = 0; i < n_cams_; i++) fid_association << "/cam" << i << "/" << current_seq_ << ".png ";
+        fid_association << 10000 << " " << 0 << " ";
+
         for(int i = 0; i < n_lidars_; i++) fid_association << "/lidar" << i << "/" << current_seq_ << ".pcd ";
         fid_association << "\n";
     }
