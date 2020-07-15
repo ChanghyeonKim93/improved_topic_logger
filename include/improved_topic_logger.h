@@ -68,7 +68,7 @@ private: // private methods
     void initializeAllFlags();
     void callbackImage(const sensor_msgs::ImageConstPtr& msg, const int& id);
     void callbackLidar(const sensor_msgs::PointCloud2ConstPtr& msg_lidar, const int& id);
-    void callbackMcu(const improved_topic_logger::imu_serialConstPtr& msg_imu_serial);
+    void callbackMcu(const improved_topic_logger::imu_serial::ConstPtr& msg_imu_serial);
 
 
 private:

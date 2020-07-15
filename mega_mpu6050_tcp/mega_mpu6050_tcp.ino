@@ -123,15 +123,6 @@ void loop() {
   gyro_y      = Wire.read()<<8 | Wire.read(); // reading registers: 0x45 (GYRO_YOUT_H) and 0x46 (GYRO_YOUT_L)
   gyro_z      = Wire.read()<<8 | Wire.read(); // reading registers: 0x47 (GYRO_ZOUT_H) and 0x48 (GYRO_ZOUT_L)
 
-  /*u_ax = (uint16_t) 32768 + (uint16_t) accelerometer_x;
-  u_ay = (uint16_t) 32768 + (uint16_t) accelerometer_y;
-  u_az = (uint16_t) 32768 + (uint16_t) accelerometer_z;
-
-  u_temp = (uint16_t) 32768 + (uint16_t) temperature;
-  u_gx = (uint16_t) 32768 + (uint16_t) gyro_x;
-  u_gy = (uint16_t) 32768 + (uint16_t) gyro_y;
-  u_gz = (uint16_t) 32768 + (uint16_t) gyro_z;*/
-
   u_ax = (uint16_t) 32768 + (uint16_t) accelerometer_x;
   u_ay = (uint16_t) 32768 + (uint16_t) accelerometer_y;
   u_az = (uint16_t) 32768 + (uint16_t) accelerometer_z;
@@ -153,16 +144,10 @@ void loop() {
   Serial.print(" | gY = "); Serial.print(gyro[1]);
   Serial.print(" | gZ = "); Serial.print(gyro[2]);
   Serial.println();*/
-  
-  String AX = String(u_ax);
-  String AY = String(u_ay);
-  String AZ = String(u_az);
-  String GX = String(u_gx);
-  String GY = String(u_gy);
-  String GZ = String(u_gz);
-  String tmp = String(u_temp);
  
-  String data = "$" + AX + "," + AY + "," + AZ + "," + GX + "," + GY + "," + GZ + "*" ;
+  String data = "$" + String(u_ax) + "," + String(u_ay) + "," + String(u_az) 
+  + "," + String(u_gx) + "," + String(u_gy) + "," + String(u_gz) + "*" ;
+  
   // Serial.println(data);
   int length = data.indexOf("*") + 2;
   char data_final[length+1];
@@ -170,7 +155,13 @@ void loop() {
 
   if(micros() > publisher_timer){
     // step 1: request reading from sensor
-    publisher_timer = micros() + 6500; // 150 Hz
+    imu_time = micros(); // microseconds
+    time_sec  = imu_time/1000000;
+    time_nsec = imu_time - time_sec*1000000;
+    
+    publisher_timer = imu_time + 3000; // 150 Hz
+    imu_msg.stamp.sec = time_sec;
+    imu_msg.stamp.nsec = time_nsec;
     imu_msg.seq  = cnt_imu;
     imu_msg.data = data_final;
     ++cnt;
