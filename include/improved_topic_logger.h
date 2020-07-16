@@ -103,6 +103,7 @@ private:
 
     // data container (buffer)
     cv::Mat* buf_imgs_; // Images from mvBlueCOUGAR-X cameras.
+    double imu_time_; // imu time!
     double buf_time_; // triggered time stamp from Arduino. (second)
     pcl::PointCloud<pcl::PointXYZI>::Ptr* buf_lidars_; // point clouds (w/ intensity) from Velodyne VLP16 
     
@@ -179,6 +180,7 @@ ImprovedTopicLogger::ImprovedTopicLogger(ros::NodeHandle& nh,
     
     // initialize arduino container & subscriber.
     flag_mcu_ = false;
+    imu_time_ = -1.0;
     buf_time_ = -1.0;
     sub_mcu_ = nh_.subscribe("/mcu/mpu6050", 30, &ImprovedTopicLogger::callbackMcu, this);
 
@@ -348,7 +350,7 @@ void ImprovedTopicLogger::callbackLidar(const sensor_msgs::PointCloud2ConstPtr& 
 };
 
 void ImprovedTopicLogger::callbackMcu(const improved_topic_logger::imu_serial::ConstPtr& msg_imu_serial){
-    buf_time_ = (double)msg_imu_serial->stamp.sec + (double)msg_imu_serial->stamp.nsec/(double)1000000.0;
+    imu_time_ = (double)msg_imu_serial->stamp.sec + (double)msg_imu_serial->stamp.nsec/(double)1000000.0;
     current_seq_ = msg_imu_serial->seq;
 
     char* serial_str = (char*)msg_imu_serial->data.c_str();
@@ -379,13 +381,14 @@ void ImprovedTopicLogger::callbackMcu(const improved_topic_logger::imu_serial::C
 
     int trg = 0;
     if(msg_imu_serial->flag_trigger){
+        buf_time_ = imu_time_;
         last_seq_img_ = current_seq_;
         trg = 1;
     }
     // save imu data
     if(fid_imu.is_open()){
         fid_imu << current_seq_ << " " << trg << " "
-        << buf_time_ << " " 
+        << imu_time_ << " " 
         << acc_f[0] <<" " << acc_f[1]<< " " << acc_f[2] << " "
         << gyro_f[0] <<" " << gyro_f[1]<< " " << gyro_f[2] << " "
         << temp_f << "\n";
