@@ -98,6 +98,17 @@ int main(int argc, char **argv) {
                 if(is_query_ok){
                     itl->saveAllData();
                     itl->initializeAllFlags();
+
+                    ros::spinOnce();
+                    ros::spinOnce();
+                    ros::spinOnce();
+                    ros::spinOnce();
+                    ros::spinOnce();
+                    ros::spinOnce();
+                    ros::spinOnce();
+                    ros::spinOnce();
+                    ros::spinOnce();
+                    ros::spinOnce();
                 }
                 // else cout << "   fail to save...\n";
                 if(c == 'f') break;

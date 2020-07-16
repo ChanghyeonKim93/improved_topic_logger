@@ -180,7 +180,7 @@ ImprovedTopicLogger::ImprovedTopicLogger(ros::NodeHandle& nh,
     // initialize arduino container & subscriber.
     flag_mcu_ = false;
     buf_time_ = -1.0;
-    sub_mcu_ = nh_.subscribe("/mcu/mpu6050", 1, &ImprovedTopicLogger::callbackMcu, this);
+    sub_mcu_ = nh_.subscribe("/mcu/mpu6050", 30, &ImprovedTopicLogger::callbackMcu, this);
 
 
     // generate save folder
