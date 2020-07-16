@@ -89,7 +89,6 @@ int main(int argc, char **argv) {
             
             while(1){
                 c = getch();
-                itl->initializeAllFlags();
                 ros::spinOnce();
 
                 // send single query to all sensors.
@@ -98,9 +97,9 @@ int main(int argc, char **argv) {
                 // save all data
                 if(is_query_ok){
                     itl->saveAllData();
+                    itl->initializeAllFlags();
                 }
                 // else cout << "   fail to save...\n";
-
                 if(c == 'f') break;
             }
             cout << user_manual;         

@@ -122,6 +122,8 @@ private:
 
     string save_dir_;
     int current_seq_;
+    int last_seq_img_;
+    int last_seq_lidar_;
 };
 
 
@@ -376,7 +378,10 @@ void ImprovedTopicLogger::callbackMcu(const improved_topic_logger::imu_serial::C
     temp_f = (float)temp_i/340.0f+36.53f;
 
     int trg = 0;
-    if(msg_imu_serial->flag_trigger) trg = 1;
+    if(msg_imu_serial->flag_trigger){
+        last_seq_img_ = current_seq_;
+        trg = 1;
+    }
     // save imu data
     if(fid_imu.is_open()){
         fid_imu << current_seq_ << " " << trg << " "
@@ -436,24 +441,24 @@ void ImprovedTopicLogger::saveAllData(){
 		png_param_on = true;
 	}
     for(int id = 0; id < n_cams_; id++){
-        string file_name = save_dir_ + "/cam" + itos(id) + "/" + itos(current_seq_) + ".png";
+        string file_name = save_dir_ + "/cam" + itos(id) + "/" + itos(last_seq_img_) + ".png";
 	    cv::imwrite(file_name, *(buf_imgs_ + id), png_parameters);
     }
 
     // save lidars
     for(int id = 0; id < n_lidars_; id++){
-        string file_name = save_dir_ + "/lidar" + itos(id) + "/" + itos(current_seq_) + ".pcd";
+        string file_name = save_dir_ + "/lidar" + itos(id) + "/" + itos(last_seq_lidar_) + ".pcd";
         saveLidarDataRingTime(file_name, id);
     }
 
     // save association
     if(fid_association.is_open()){
-        fid_association << current_seq_ << " ";
+        fid_association << last_seq_img_ << " ";
         fid_association << buf_time_ << " ";
-        for(int i = 0; i < n_cams_; i++) fid_association << "/cam" << i << "/" << current_seq_ << ".png ";
+        for(int i = 0; i < n_cams_; i++) fid_association << "/cam" << i << "/" << last_seq_img_ << ".png ";
         fid_association << 10000 << " " << 0 << " ";
 
-        for(int i = 0; i < n_lidars_; i++) fid_association << "/lidar" << i << "/" << current_seq_ << ".pcd ";
+        for(int i = 0; i < n_lidars_; i++) fid_association << "/lidar" << i << "/" << last_seq_lidar_ << ".pcd ";
         fid_association << "\n";
     }
 };
