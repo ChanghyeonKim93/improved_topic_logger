@@ -89,6 +89,7 @@ int main(int argc, char **argv) {
             
             while(1){
                 c = getch();
+                itl->initializeAllFlags();
                 ros::spinOnce();
 
                 // send single query to all sensors.

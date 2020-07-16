@@ -63,9 +63,8 @@ public:
     inline int getNumLidars(){return n_lidars_;};
     
     bool isDataReceivedAllSensors();
-
-private: // private methods
     void initializeAllFlags();
+private: // private methods
     void callbackImage(const sensor_msgs::ImageConstPtr& msg, const int& id);
     void callbackLidar(const sensor_msgs::PointCloud2ConstPtr& msg_lidar, const int& id);
     void callbackMcu(const improved_topic_logger::imu_serial::ConstPtr& msg_imu_serial);
