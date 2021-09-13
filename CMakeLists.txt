@@ -55,3 +55,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pg -O2 -m64 -Ofast -flto -ms
 add_executable (improved_topic_logger src/main.cpp)
 target_link_libraries (improved_topic_logger ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 target_link_libraries (improved_topic_logger ${Eigen_LIBRARIES} )
+
+add_executable (test_serial src/main_serial.cpp)
+target_link_libraries (test_serial ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries (test_serial ${Eigen_LIBRARIES} )
