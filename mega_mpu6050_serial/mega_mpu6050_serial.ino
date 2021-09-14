@@ -11,6 +11,7 @@ byte stringChecksum(volatile char* s, int len) {
 };
 
 volatile byte flag_imuready = LOW;
+volatile byte flag_trigger  = 0;
 void imuISR(){ flag_imuready  = HIGH; };
 
 typedef union USHORT_UNION_{
@@ -37,7 +38,6 @@ uint32_t time_prev;
 USHORT_UNION tsec;
 UINT_UNION   tusec;
 
-uint32_t trigger_time = 0;
 uint32_t dt = 0;
 
 uint8_t  cnt     = 0;
@@ -51,7 +51,7 @@ void setup() {
   pinMode(PIN_CAM_TRG, OUTPUT);
   attachInterrupt(digitalPinToInterrupt(PIN_IMU_INT), imuISR, RISING);
   
-  Serial.begin(230400);
+  Serial.begin(460800);
   
   Wire.begin();
   Wire.setClock(400000L); // 400 kHz I2C clock
@@ -105,6 +105,7 @@ void loop() {
       digitalWrite(PIN_CAM_TRG,HIGH);
       digitalWrite(PIN_CAM_TRG,HIGH);
       digitalWrite(PIN_CAM_TRG,LOW);
+      flag_trigger = 1;
     }
 
     // Read timestamp
@@ -151,17 +152,19 @@ void loop() {
     buf[17]  = tusec.bytes_[1]; // time (microsecond part, low)
     buf[18]  = tusec.bytes_[2]; // time (microsecond part, high)
     buf[19]  = tusec.bytes_[3]; // time (microsecond part, highest)
-                              
-    byte c = stringChecksum((char*)buf,20);
+    buf[20]  = flag_trigger;                              
+    
+    byte c = stringChecksum((char*)buf,21);
     
     Serial.write('$');
-    Serial.write((char*)buf,20);
+    Serial.write((char*)buf,21);
     Serial.write('*');
     Serial.write(c);
     Serial.write('%');
     
     // Prev time changing.
     time_prev = time_curr;
+    flag_trigger  = 0;
     flag_imuready = LOW;
   }
   
